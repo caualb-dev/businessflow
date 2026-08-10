@@ -10,6 +10,6 @@ public class HealthController {
 
     @GetMapping
     public String health() {
-        return "Businessflow esta funcionando";
+        return "esta funcionando";
     }
 }
