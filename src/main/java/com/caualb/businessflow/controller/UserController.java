@@ -1,7 +1,7 @@
 package com.caualb.businessflow.controller;
 
-import com.caualb.businessflow.dto.DadosListagemUser;
-import com.caualb.businessflow.dto.UserDados;
+import com.caualb.businessflow.dto.response.DadosListagemUser;
+import com.caualb.businessflow.dto.request.UserDados;
 import com.caualb.businessflow.model.entity.User;
 import com.caualb.businessflow.repository.UsersRepository;
 import jakarta.transaction.Transactional;
@@ -9,9 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -27,8 +26,15 @@ public class UserController {
     }
 
     @GetMapping
-    public Page<DadosListagemUser> listar(Pageable paginacao) {
+    public Page<DadosListagemUser> listar(@PageableDefault(size = 10 , sort = {"nome"}) Pageable paginacao) {
     return repository.findAll(paginacao).map(DadosListagemUser::new);
+    }
+
+    @PutMapping
+    @Transactional
+    public void atualizar(@RequestBody @Valid UserAtualizarDados dados){
+        var medico = repository.getReferenceById(dados.id());
+        medico.atualizarInformacoes(dados);
     }
 
 

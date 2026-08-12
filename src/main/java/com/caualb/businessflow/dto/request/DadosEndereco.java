@@ -1,7 +1,6 @@
-package com.caualb.businessflow.dto;
+package com.caualb.businessflow.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public record DadosEndereco(

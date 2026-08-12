@@ -1,7 +1,8 @@
 package com.caualb.businessflow.model.entity;
 
-import com.caualb.businessflow.dto.DadosEndereco;
+import com.caualb.businessflow.dto.request.DadosEndereco;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Endereco {
-
     private String logradouro;
     private String bairro;
     private String cep;
@@ -28,6 +28,34 @@ public class Endereco {
         this.complemento = dados.complemento();
         this.cidade = dados.cidade();
         this.uf = dados.uf();
+
+
+    }
+
+    public void atualizarInformacoes(DadosEndereco dados) {
+        if (dados.logradouro() != null){
+            this.logradouro = dados.logradouro();
+        }
+        if (dados.bairro() != null){
+            this.bairro = dados.bairro();
+        }
+        if (dados.cep() != null){
+            this.cep = dados.cep();
+        }
+        if (dados.numero() != null){
+            this.numero = dados.cep();
+        }
+        if (dados.complemento() != null){
+            this.complemento = dados.complemento();
+        }
+        if (dados.cidade() != null){
+            this.cidade = dados.cidade();
+        }
+        if (dados.logradouro() != null){
+            this.logradouro = dados.logradouro();
+        }if (dados.uf() != null){
+            this.uf = dados.uf();
+        }
 
 
     }

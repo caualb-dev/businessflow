@@ -1,8 +1,10 @@
 package com.caualb.businessflow.model.entity;
 
-import com.caualb.businessflow.dto.UserDados;
+import com.caualb.businessflow.controller.UserAtualizarDados;
+import com.caualb.businessflow.dto.request.UserDados;
 import com.caualb.businessflow.model.enums.Especialidade;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,5 +39,17 @@ public class User{
         this.email = dados.email();
         this.endereco = new Endereco(dados.endereco());
 
+    }
+
+    public void atualizarInformacoes(@Valid UserAtualizarDados dados) {
+        if (dados.nome() != null) {
+            this.nome = dados.nome();
+        }
+        if(dados.telefone() != null) {
+            this.telefone = dados.telefone();
+        }
+        if(dados.endereco() != null){
+            this.endereco.atualizarInformacoes(dados.endereco());
+        }
     }
 }
