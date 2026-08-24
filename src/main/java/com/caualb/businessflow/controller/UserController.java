@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/users")
@@ -21,28 +23,37 @@ public class UserController {
 
     @PostMapping
     @Transactional
-    public void cadastrar(@RequestBody @Valid UserDados dados){
-        repository.save(new User(dados));
+    public ResponseEntity cadastrar(@RequestBody @Valid UserDados dados, UriComponentsBuilder uriBuilder){
+        var user = new User(dados);
+        repository.save(user);
+
+        var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(user.getId()).toUri();
+        return ResponseEntity.created(uri).body(new DadosDetalhamentoUser(user));
     }
 
     @GetMapping
-    public Page<DadosListagemUser> listar(@PageableDefault(size = 10 , sort = {"nome"}) Pageable paginacao) {
-    return repository.findAllByAtivoTrue(paginacao).map(DadosListagemUser::new);
+    public ResponseEntity <Page<DadosListagemUser> > listar(@PageableDefault(size = 10 , sort = {"nome"}) Pageable paginacao) {
+       var page = repository.findAll(paginacao).map(DadosListagemUser::new);
 
+       return ResponseEntity.ok(page);
     }
 
     @PutMapping
     @Transactional
-    public void atualizar(@RequestBody @Valid UserAtualizarDados dados){
+    public ResponseEntity atualizar(@RequestBody @Valid UserAtualizarDados dados){
         var user = repository.getReferenceById(dados.id());
         user.atualizarInformacoes(dados);
+        return ResponseEntity.ok(new DadosDetalhamentoUser(user));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
-    public void excluir(@PathVariable Long id){
+    public ResponseEntity excluir(@PathVariable Long id) {
+
         var user = repository.getReferenceById(id);
         user.excluir();
+
+        return ResponseEntity.noContent().build();
 
     }
 
