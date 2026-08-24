@@ -25,6 +25,8 @@ public class User{
     private String email;
     private String telefone;
 
+    private boolean ativo;
+
     @Enumerated(EnumType.STRING)
     private Especialidade especialidade;
 
@@ -32,6 +34,7 @@ public class User{
     private Endereco endereco;
 
     public User(UserDados dados) {
+        this.ativo = true;
         this.nome = dados.nome();
         this.cpf = dados.cpf();
         this.telefone = dados.telefone();
@@ -51,5 +54,9 @@ public class User{
         if(dados.endereco() != null){
             this.endereco.atualizarInformacoes(dados.endereco());
         }
+    }
+
+    public void excluir() {
+        this.ativo = false;
     }
 }

@@ -43,7 +43,7 @@ public class Endereco {
             this.cep = dados.cep();
         }
         if (dados.numero() != null){
-            this.numero = dados.cep();
+            this.numero = dados.numero();
         }
         if (dados.complemento() != null){
             this.complemento = dados.complemento();
@@ -51,9 +51,7 @@ public class Endereco {
         if (dados.cidade() != null){
             this.cidade = dados.cidade();
         }
-        if (dados.logradouro() != null){
-            this.logradouro = dados.logradouro();
-        }if (dados.uf() != null){
+        if (dados.uf() != null){
             this.uf = dados.uf();
         }
 

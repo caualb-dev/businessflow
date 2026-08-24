@@ -27,14 +27,23 @@ public class UserController {
 
     @GetMapping
     public Page<DadosListagemUser> listar(@PageableDefault(size = 10 , sort = {"nome"}) Pageable paginacao) {
-    return repository.findAll(paginacao).map(DadosListagemUser::new);
+    return repository.findAllByAtivoTrue(paginacao).map(DadosListagemUser::new);
+
     }
 
     @PutMapping
     @Transactional
     public void atualizar(@RequestBody @Valid UserAtualizarDados dados){
-        var medico = repository.getReferenceById(dados.id());
-        medico.atualizarInformacoes(dados);
+        var user = repository.getReferenceById(dados.id());
+        user.atualizarInformacoes(dados);
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public void excluir(@PathVariable Long id){
+        var user = repository.getReferenceById(id);
+        user.excluir();
+
     }
 
 
