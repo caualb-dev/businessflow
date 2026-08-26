@@ -27,7 +27,7 @@ public class UserController {
         var user = new User(dados);
         repository.save(user);
 
-        var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(user.getId()).toUri();
+        var uri = uriBuilder.path("/usersf/{id}").buildAndExpand(user.getId()).toUri();
         return ResponseEntity.created(uri).body(new DadosDetalhamentoUser(user));
     }
 
@@ -55,6 +55,12 @@ public class UserController {
 
         return ResponseEntity.noContent().build();
 
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity detalhar(@PathVariable Long id){
+        var user = repository.getReferenceById(id);
+        return ResponseEntity.ok(new DadosDetalhamentoUser(user));
     }
 
 
