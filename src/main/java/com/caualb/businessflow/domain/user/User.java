@@ -1,8 +1,6 @@
-package com.caualb.businessflow.model.entity;
+package com.caualb.businessflow.domain.user;
 
-import com.caualb.businessflow.controller.UserAtualizarDados;
-import com.caualb.businessflow.dto.request.UserDados;
-import com.caualb.businessflow.model.enums.Especialidade;
+import com.caualb.businessflow.domain.endereco.Endereco;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -15,8 +13,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of ="id")
-public class User{
+@EqualsAndHashCode(of = "id")
+public class User {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -41,17 +39,16 @@ public class User{
         this.especialidade = dados.especialidade();
         this.email = dados.email();
         this.endereco = new Endereco(dados.endereco());
-
     }
 
     public void atualizarInformacoes(@Valid UserAtualizarDados dados) {
         if (dados.nome() != null) {
             this.nome = dados.nome();
         }
-        if(dados.telefone() != null) {
+        if (dados.telefone() != null) {
             this.telefone = dados.telefone();
         }
-        if(dados.endereco() != null){
+        if (dados.endereco() != null) {
             this.endereco.atualizarInformacoes(dados.endereco());
         }
     }

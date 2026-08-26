@@ -1,4 +1,4 @@
-package com.caualb.businessflow.model.enums;
+package com.caualb.businessflow.domain.user;
 
 public enum Especialidade {
     CONTABILIDADE,

@@ -1,6 +1,6 @@
-package com.caualb.businessflow.dto.request;
+package com.caualb.businessflow.domain.user;
 
-import com.caualb.businessflow.model.enums.Especialidade;
+import com.caualb.businessflow.domain.endereco.DadosEndereco;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
