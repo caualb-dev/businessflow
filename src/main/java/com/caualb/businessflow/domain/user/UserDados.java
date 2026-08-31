@@ -12,9 +12,11 @@ public record UserDados(
         String nome,
         @NotBlank
         String telefone,
-        @CPF
+        @CPF(message = "CPF formato invalido")
+        @NotBlank(message = "CPF é obrigatorio")
         String cpf,
         @Email
+        @NotBlank
         String email,
         @NotNull
         Especialidade especialidade,

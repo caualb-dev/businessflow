@@ -1,6 +1,9 @@
 package com.caualb.businessflow.domain.endereco;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +16,10 @@ public class Endereco {
     private String logradouro;
     private String bairro;
     private String cep;
+
+    @NotNull
+    @NotEmpty
+    @NotBlank(message = "Não pode ser vazio")
     private String numero;
     private String complemento;
     private String cidade;
