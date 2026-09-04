@@ -1,0 +1,173 @@
+================================================================================
+                    PROJETO: RENTFLOW (API REST SPRING BOOT)
+================================================================================
+Objetivo: Construir do zero absoluto uma API REST de gerenciamento e locacao 
+de espacos de coworking para fixar e consolidar todos os conceitos aprendidos.
+================================================================================
+
+[ ] SPRINT 1: SETUP DO AMBIENTE E INFRAESTRUTURA BASE
+--------------------------------------------------------------------------------
+[ ] Task 1.1 - Inicializacao do Projeto
+    - Acessar https://start.spring.io
+    - Configurar: Maven, Java 21, Spring Boot 3+ (ou 4.x), Jar
+    - Dependencias:
+        * Spring Web
+        * Spring Data JPA
+        * PostgreSQL Driver
+        * Flyway Migration
+        * Validation (Bean Validation)
+        * Lombok
+        * Spring Boot DevTools
+    - Configurar src/main/resources/application.properties:
+        * Porta do servidor (server.port=8080 ou 8081)
+        * spring.datasource.url, username, password
+        * spring.jpa.hibernate.ddl-auto=validate
+        * spring.jpa.show-sql=true
+        * spring.flyway.enabled=true
+
+[ ] Task 1.2 - Migration Flyway Inicial (V1)
+    - Criar arquivo: src/main/resources/db/migration/V1__create-table-salas.sql
+    - Schema da tabela 'salas':
+        * id BIGSERIAL PRIMARY KEY
+        * nome VARCHAR(255) NOT NULL
+        * tipo_espaco VARCHAR(100) NOT NULL
+        * preco_por_hora NUMERIC(10,2) NOT NULL
+        * capacidade INT NOT NULL
+        * ativo BOOLEAN NOT NULL
+        * logradouro VARCHAR(255) NOT NULL
+        * bairro VARCHAR(255) NOT NULL
+        * cep VARCHAR(9) NOT NULL
+        * numero VARCHAR(20)
+        * complemento VARCHAR(255)
+        * cidade VARCHAR(255) NOT NULL
+        * uf VARCHAR(2) NOT NULL
+
+[ ] Task 1.3 - Modelagem de Dominio (Entidade e Value Object)
+    - Criar enum TipoEspaco (SALA_REUNIAO, POSICAO_INDIVIDUAL, CABINE_CALL, AUDITORIO)
+    - Criar classe @Embeddable Endereco (com campos de endereco e construtor via DTO)
+    - Criar classe @Entity @Table(name = "salas") Sala:
+        * Atributos correspondentes a tabela
+        * @Embedded Endereco
+        * @Enumerated(EnumType.STRING) TipoEspaco
+        * Anotacoes Lombok (@Getter, @NoArgsConstructor, @AllArgsConstructor, @EqualsAndHashCode(of = "id"))
+        * Construtor recebendo DTO de cadastro inicializando ativo = true
+
+[ ] Task 1.4 - Interface de Repositorio
+    - Criar interface SalaRepository estendendo JpaRepository<Sala, Long>
+
+
+================================================================================
+[ ] SPRINT 2: CRUD ROBUSTO, DTOS E BOAS PRATICAS REST
+--------------------------------------------------------------------------------
+[ ] Task 2.1 - Criacao dos DTOs (Records) e Validacoes
+    - Criar record DadosEndereco (@NotBlank logradouro, @NotBlank bairro, @NotBlank cep, @NotBlank cidade, @NotBlank uf, numero, complemento)
+    - Criar record DadosCadastroSala (@NotBlank nome, @NotNull TipoEspaco tipoEspaco, @NotNull @Positive precoPorHora, @NotNull @Positive capacidade, @NotNull @Valid DadosEndereco endereco)
+    - Criar record DadosDetalhamentoSala (id, nome, tipoEspaco, precoPorHora, capacidade, ativo, Endereco endereco) com construtor que recebe a entidade Sala
+    - Criar record DadosListagemSala (id, nome, tipoEspaco, precoPorHora, capacidade) com construtor que recebe a entidade Sala
+    - Criar record DadosAtualizacaoSala (@NotNull Long id, String nome, BigDecimal precoPorHora, Integer capacidade, DadosEndereco endereco)
+
+[ ] Task 2.2 - Endpoint de Cadastro (POST /salas)
+    - Criar SalaController com @RestController e @RequestMapping("/salas")
+    - Metodo cadastrar com @PostMapping, @Transactional, @RequestBody @Valid DadosCadastroSala
+    - Instanciar Sala, salvar no repository
+    - Gerar URI de Location via UriComponentsBuilder.path("/salas/{id}").buildAndExpand(sala.getId()).toUri()
+    - Retornar ResponseEntity.created(uri).body(new DadosDetalhamentoSala(sala)) -> HTTP 201
+
+[ ] Task 2.3 - Endpoint de Listagem Paginada (GET /salas)
+    - Adicionar no SalaRepository: Page<Sala> findAllByAtivoTrue(Pageable paginacao)
+    - Metodo listar com @GetMapping e @PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao
+    - Fazer repository.findAllByAtivoTrue(paginacao).map(DadosListagemSala::new)
+    - Retornar ResponseEntity.ok(page) -> HTTP 200
+
+[ ] Task 2.4 - Endpoint de Detalhamento por ID (GET /salas/{id})
+    - Metodo detalhar com @GetMapping("/{id}") e @PathVariable Long id
+    - Buscar sala via repository.getReferenceById(id)
+    - Retornar ResponseEntity.ok(new DadosDetalhamentoSala(sala)) -> HTTP 200
+
+[ ] Task 2.5 - Endpoint de Atualizacao Parcial (PUT /salas)
+    - Criar metodo atualizarInformacoes(DadosAtualizacaoSala dados) dentro da entidade Sala
+    - Metodo atualizar com @PutMapping, @Transactional, @RequestBody @Valid DadosAtualizacaoSala
+    - Buscar referencia via repository.getReferenceById(dados.id())
+    - Chamar sala.atualizarInformacoes(dados)
+    - Retornar ResponseEntity.ok(new DadosDetalhamentoSala(sala)) -> HTTP 200
+
+[ ] Task 2.6 - Endpoint de Exclusao Logica (DELETE /salas/{id})
+    - Criar metodo excluir() dentro da entidade Sala (this.ativo = false)
+    - Metodo excluir com @DeleteMapping("/{id}"), @Transactional, @PathVariable Long id
+    - Buscar referencia via repository.getReferenceById(id) e chamar sala.excluir()
+    - Retornar ResponseEntity.noContent().build() -> HTTP 204
+
+
+================================================================================
+[ ] SPRINT 3: TRATAMENTO GLOBAL DE EXCECOES (REST CONTROLLER ADVICE)
+--------------------------------------------------------------------------------
+[ ] Task 3.1 - Classe TratadorDeErros
+    - Criar classe TratadorDeErros anotada com @RestControllerAdvice
+    - Tratar EntityNotFoundException:
+        * Anotacao @ExceptionHandler(EntityNotFoundException.class)
+        * Retornar ResponseEntity.notFound().build() -> HTTP 404
+    - Tratar MethodArgumentNotValidException:
+        * Anotacao @ExceptionHandler(MethodArgumentNotValidException.class)
+        * Extrair ex.getFieldErrors()
+        * Mapear para um record interno DadosErroValidacao(String campo, String mensagem)
+        * Retornar ResponseEntity.badRequest().body(listaDeErros) -> HTTP 400
+
+
+================================================================================
+[ ] SPRINT 4: AUTENTICACAO, SEGURANCA E JWT (SPRING SECURITY)
+--------------------------------------------------------------------------------
+[ ] Task 4.1 - Dependencias de Seguranca
+    - Adicionar dependencias no pom.xml:
+        * spring-boot-starter-security
+        * com.auth0:java-jwt
+    - Adicionar propriedade api.security.token.secret=${JWT_SECRET:segredo123} no application.properties
+
+[ ] Task 4.2 - Migration Flyway de Usuarios (V2)
+    - Criar arquivo: src/main/resources/db/migration/V2__create-table-usuarios.sql
+    - Schema da tabela 'usuarios':
+        * id BIGSERIAL PRIMARY KEY
+        * login VARCHAR(100) NOT NULL UNIQUE
+        * senha VARCHAR(255) NOT NULL
+
+[ ] Task 4.3 - Entidade Usuario e UserDetails
+    - Criar classe @Entity @Table(name = "usuarios") Usuario implementando UserDetails
+    - Sobrescrever metodos: getUsername(), getPassword(), getAuthorities() (ROLE_USER), isAccountNonExpired, etc.
+    - Criar UsuarioRepository com UserDetails findByLogin(String login)
+    - Criar AutenticacaoService implementando UserDetailsService com metodo loadUserByUsername(String username)
+
+[ ] Task 4.4 - Configuracoes do Spring Security
+    - Criar classe SecurityConfigurations com @Configuration e @EnableWebSecurity
+    - Bean SecurityFilterChain configurando:
+        * csrf -> csrf.disable()
+        * sessionManagement -> sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+    - Bean AuthenticationManager (AuthenticationConfiguration)
+    - Bean PasswordEncoder retornando new BCryptPasswordEncoder()
+
+[ ] Task 4.5 - Servico de Token JWT
+    - Criar classe TokenService com @Service
+    - Injetar @Value("${api.security.token.secret}") private String secret
+    - Metodo gerarToken(Usuario usuario):
+        * Definir Algorithm.HMAC256(secret)
+        * Criar JWT com issuer "API RentFlow", subject usuario.getLogin(), expiracao de 2 horas
+        * Assinar e retornar String do token
+    - Tratar excecao JWTCreationException
+
+[ ] Task 4.6 - Controller de Autenticacao (POST /login)
+    - Criar record DadosAutenticacao(@NotBlank String login, @NotBlank String senha)
+    - Criar record DadosTokenJWT(String token)
+    - Criar AutenticacaoController com @RestController e @RequestMapping("/login")
+    - Injetar AuthenticationManager e TokenService
+    - Metodo efetuarLogin com @PostMapping e @RequestBody @Valid DadosAutenticacao:
+        * Criar UsernamePasswordAuthenticationToken(dados.login(), dados.senha())
+        * Chamar manager.authenticate(token)
+        * Gerar tokenJWT via tokenService.gerarToken((Usuario) authentication.getPrincipal())
+        * Retornar ResponseEntity.ok(new DadosTokenJWT(tokenJWT)) -> HTTP 200
+
+[ ] Task 4.7 (Desafio Extra) - Interceptador de Seguranca (Security Filter)
+    - Criar classe SecurityFilter herdando OncePerRequestFilter com @Component
+    - Extrair token do header Authorization ("Bearer <token>")
+    - Metodo recuperarSubject(String tokenJWT) no TokenService usando JWT.require(...)
+    - Validar token, buscar usuario no UsuarioRepository e autenticar no SecurityContextHolder
+    - Registrar o filter na SecurityConfigurations antes do UsernamePasswordAuthenticationFilter:
+        * http.authorizeHttpRequests(req -> req.requestMatchers("/login").permitAll().anyRequest().authenticated())
+        * http.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
